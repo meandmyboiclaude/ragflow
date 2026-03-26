@@ -27,7 +27,13 @@ import (
 
 // RunMigrations runs all manual database migrations
 // These are migrations that cannot be handled by AutoMigrate alone
+// Note: These migrations use MySQL-specific SQL. Skip on PostgreSQL since
+// AutoMigrate creates the correct schema from scratch.
 func RunMigrations(db *gorm.DB) error {
+	if db.Dialector.Name() == "postgres" {
+		logger.Info("Skipping manual migrations on PostgreSQL (fresh schema via AutoMigrate)")
+		return nil
+	}
 	// Check if tenant_llm table has composite primary key and migrate to ID primary key
 	if err := migrateTenantLLMPrimaryKey(db); err != nil {
 		return fmt.Errorf("failed to migrate tenant_llm primary key: %w", err)

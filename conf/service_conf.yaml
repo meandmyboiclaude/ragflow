@@ -16,7 +16,7 @@ mysql:
 minio:
   user: 'rag_flow'
   password: 'infini_rag_flow'
-  host: 'localhost:9000'
+  host: '127.0.0.1:9014'
   bucket: ''
   prefix_path: ''
 es:
@@ -28,8 +28,8 @@ os:
   username: 'admin'
   password: 'infini_rag_flow_OS_01'
 infinity:
-  uri: 'localhost:23817'
-  postgres_port: 5432
+  uri: '127.0.0.1:23817'
+  postgres_port: 5434
   db_name: 'default_db'
 oceanbase:
   scheme: 'oceanbase' # set 'mysql' to create connection using mysql config
@@ -42,8 +42,8 @@ oceanbase:
 redis:
   db: 1
   username: ''
-  password: 'infini_rag_flow'
-  host: 'localhost:6379'
+  password: 'falkordb'
+  host: '127.0.0.1:6400'
 task_executor:
   message_queue_type: 'redis'
 user_default_llm:
@@ -52,15 +52,15 @@ user_default_llm:
       name: 'bge-m3'
       factory: 'xxxx'
       api_key: 'xxx'
-      base_url: 'http://localhost:6380'
-# postgres:
-#   name: 'rag_flow'
-#   user: 'rag_flow'
-#   password: 'infini_rag_flow'
-#   host: 'postgres'
-#   port: 5432
-#   max_connections: 100
-#   stale_timeout: 30
+      base_url: 'http://localhost:7997'
+postgres:
+  name: 'rag_flow'
+  user: 'rag_flow'
+  password: 'ragflow_secure_2026'
+  host: '127.0.0.1'
+  port: 5432
+  max_connections: 100
+  stale_timeout: 30
 # s3:
 #   access_key: 'access_key'
 #   secret_key: 'secret_key'

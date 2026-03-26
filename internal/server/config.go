@@ -508,10 +508,25 @@ func FromConfigFile(configPath string) error {
 	}
 	globalConfig.RegisterEnabled = registerEnabled
 
-	// If we loaded service_conf.yaml, map mysql fields to DatabaseConfig
+	// If we loaded service_conf.yaml, map database fields to DatabaseConfig
+	// DB_TYPE env var selects backend: "postgres" or "mysql" (default)
 	if globalConfig != nil && globalConfig.Database.Host == "" {
-		// Try to map from mysql section
-		if v.IsSet("mysql") {
+		dbType := os.Getenv("DB_TYPE")
+		if dbType == "" {
+			dbType = "mysql"
+		}
+		if dbType == "postgres" && v.IsSet("postgres") {
+			pgConfig := v.Sub("postgres")
+			if pgConfig != nil {
+				globalConfig.Database.Driver = "postgres"
+				globalConfig.Database.Host = pgConfig.GetString("host")
+				globalConfig.Database.Port = pgConfig.GetInt("port")
+				globalConfig.Database.Database = pgConfig.GetString("name")
+				globalConfig.Database.Username = pgConfig.GetString("user")
+				globalConfig.Database.Password = pgConfig.GetString("password")
+				globalConfig.Database.Charset = "utf8"
+			}
+		} else if v.IsSet("mysql") {
 			mysqlConfig := v.Sub("mysql")
 			if mysqlConfig != nil {
 				globalConfig.Database.Driver = "mysql"
@@ -570,6 +585,10 @@ func FromConfigFile(configPath string) error {
 	}
 
 	// Map doc_engine section to DocEngineConfig
+	// DOC_ENGINE env var takes priority
+	if globalConfig != nil && docEngine != "" {
+		globalConfig.DocEngine.Type = EngineType(docEngine)
+	}
 	if globalConfig != nil && globalConfig.DocEngine.Type == "" {
 		if v.IsSet("doc_engine") {
 			docEngineConfig := v.Sub("doc_engine")

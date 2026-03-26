@@ -34,6 +34,7 @@ import (
 	gormLogger "gorm.io/gorm/logger"
 
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -68,15 +69,6 @@ func InitDB() error {
 	cfg := server.GetConfig()
 	dbCfg := cfg.Database
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
-		dbCfg.Username,
-		dbCfg.Password,
-		dbCfg.Host,
-		dbCfg.Port,
-		dbCfg.Database,
-		dbCfg.Charset,
-	)
-
 	// Set log level
 	var gormLogLevel gormLogger.LogLevel
 	if cfg.Server.Mode == "debug" {
@@ -85,15 +77,26 @@ func InitDB() error {
 		gormLogLevel = gormLogger.Silent
 	}
 
-	// Connect to database
-	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	gormCfg := &gorm.Config{
 		Logger: gormLogger.Default.LogMode(gormLogLevel),
 		NowFunc: func() time.Time {
 			return time.Now().Local()
 		},
 		TranslateError: true,
-	})
+	}
+
+	// Connect to database — select driver based on config
+	var err error
+	switch dbCfg.Driver {
+	case "postgres":
+		dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+			dbCfg.Host, dbCfg.Port, dbCfg.Username, dbCfg.Password, dbCfg.Database)
+		DB, err = gorm.Open(postgres.Open(dsn), gormCfg)
+	default:
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
+			dbCfg.Username, dbCfg.Password, dbCfg.Host, dbCfg.Port, dbCfg.Database, dbCfg.Charset)
+		DB, err = gorm.Open(mysql.Open(dsn), gormCfg)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to connect database: %w", err)
 	}
