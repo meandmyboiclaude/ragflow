@@ -89,6 +89,8 @@ class JSONField(LongTextField):
     def python_value(self, value):
         if not value:
             return self.default_value
+        if isinstance(value, (dict, list)):
+            return value
         return json_loads(value, object_hook=self._object_hook, object_pairs_hook=self._object_pairs_hook)
 
 
@@ -119,6 +121,8 @@ class SerializedField(LongTextField):
         elif self._serialized_type == SerializedType.JSON:
             if value is None:
                 return {}
+            if isinstance(value, (dict, list)):
+                return value
             return json_loads(value, object_hook=self._object_hook, object_pairs_hook=self._object_pairs_hook)
         else:
             raise ValueError(f"the serialized type {self._serialized_type} is not supported")
